@@ -17,9 +17,11 @@ namespace TaskManager.Api.Services
             _logger = logger;
         }
 
-        public async Task<TaskPagedResultDto> GetTasks(TaskFilterDto filter)
+        public async Task<TaskPagedResultDto> GetTasks(TaskFilterDto filter, int userId)
         {
             var query = _context.Tasks.AsQueryable();
+            query = query.Where(t=>t.UserId == userId);
+
             if (filter.IsCompleted.HasValue)
             {
                 query = query.Where(t => t.IsCompleted == filter.IsCompleted.Value);
@@ -97,9 +99,9 @@ namespace TaskManager.Api.Services
             return result;
         }
 
-        public async Task<TaskResponseDto?> GetTaskById(int id)
+        public async Task<TaskResponseDto?> GetTaskById(int id, int userId)
         {
-            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id);
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
             if(task == null)
             {
                 _logger.LogWarning(
@@ -126,7 +128,7 @@ namespace TaskManager.Api.Services
             }
         }
 
-        public async Task<TaskResponseDto> CreateTask (CreateTaskDto dto)
+        public async Task<TaskResponseDto> CreateTask (CreateTaskDto dto, int userId)
         {
             var newTask = new TaskItem
             {
@@ -135,7 +137,8 @@ namespace TaskManager.Api.Services
                 IsCompleted = false,
                 CreatedAt = DateTime.UtcNow,
                 DueDate = dto.DueDate,
-                Priority = dto.Priority
+                Priority = dto.Priority,
+                UserId = userId
             };
 
             _context.Tasks.Add(newTask);
@@ -160,9 +163,9 @@ namespace TaskManager.Api.Services
             return responseDto;
         }
 
-        public async Task<TaskResponseDto?> UpdateTask (int id, UpdateTaskDto dto)
+        public async Task<TaskResponseDto?> UpdateTask (int id, UpdateTaskDto dto, int userId)
         {
-            var taskToUpdate = await _context.Tasks.FirstOrDefaultAsync(t=>t.Id==id);
+            var taskToUpdate = await _context.Tasks.FirstOrDefaultAsync(t=>t.Id==id && t.UserId == userId);
 
             if(taskToUpdate==null)
             {
@@ -198,9 +201,9 @@ namespace TaskManager.Api.Services
             return responseDto;
         }
 
-        public async Task<bool> DeleteTask(int id)
+        public async Task<bool> DeleteTask(int id, int userId)
         {
-            var taskToDelete = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id);
+            var taskToDelete = await _context.Tasks.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
             if(taskToDelete==null)
             {
                 _logger.LogWarning(

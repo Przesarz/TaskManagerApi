@@ -11,6 +11,7 @@ namespace TaskManager.Api.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? DueDate { get; set; }
         public Priority Priority { get; set; }
+        public int UserId { get; set; }
 
         public TaskItem() 
         {
